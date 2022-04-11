@@ -1,0 +1,57 @@
+_base_: '../_base_/cityscapes.yml'
+
+batch_size: 3
+iters: 120000
+
+train_dataset:
+  type: Cityscapes
+  dataset_root: data/cityscapes
+  transforms:
+    - type: ResizeStepScaling
+      min_scale_factor: 0.5
+      max_scale_factor: 2.0
+      scale_step_size: 0.25
+    - type: RandomPaddingCrop
+      crop_size: [1024, 1024]
+    - type: RandomHorizontalFlip
+    - type: RandomDistort
+      brightness_range: 0.4
+      contrast_range: 0.4
+      saturation_range: 0.4
+    - type: Normalize
+  mode: train
+
+val_dataset:
+  type: Cityscapes
+  dataset_root: data/cityscapes
+  transforms:
+    - type: Normalize
+  mode: val
+  
+model:
+  type: DualResNet_imagenet
+  layers: [2,2,2,2]
+  num_classes: 19
+  planes: 64
+  spp_planes: 128
+  head_planes: 128
+  augment: True
+  pretrained: 'pdparams/ddrnet.pdparams'
+
+optimizer: # Set the type of optimizer
+  type: sgd #Using SGD (Stochastic Gradient Descent) method as the optimizer
+  momentum: 0.9
+  weight_decay: 5.0e-4 # Weight attenuation, the purpose of use is to prevent overfitting
+
+#lr_scheduler: # Related settings for learning rate
+  #type: PolynomialDecay # A type of learning rate,a total of 12 strategies are supported
+learning_rate: 0.01
+  #power: 0.9
+  #end_lr: 0
+
+loss: # Set the type of loss function
+  types:
+    - type: OhemCrossEntropyLoss
+  coef: [1,0.4]
+  # BiseNetV2 has 4 auxiliary losses, plus a total of five main losses, 1 means weight all_loss = coef_1 * loss_1 + .... + coef_n * loss_n
+
